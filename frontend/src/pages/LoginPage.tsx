@@ -35,16 +35,25 @@ export default function LoginPage({ setIsAuthenticated }: Props) {
 	};
 
 	return (
-		<div className="login-page">
-			<h2>Login</h2>
-			<form onSubmit={handleSubmit}>
-				<input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
-				<input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-				<button type="submit" disabled={loading}>
-					{loading ? "Logging in..." : "Login"}
-				</button>
-				{error && <div className="error">{error}</div>}
-			</form>
+		<div className="login-page card-centered">
+			<div className="card">
+				<div className="brand-header">
+					<span className="brand-logo">🔎</span>
+					<span className="brand-title">Job Tracker</span>
+				</div>
+				<h2>Sign In</h2>
+				<form onSubmit={handleSubmit}>
+					<input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+					<input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+					<button type="submit" disabled={loading}>
+						{loading ? "Logging in..." : "Login"}
+					</button>
+					{error && <div className="error">{error}</div>}
+				</form>
+				<div className="form-footer">
+					Don't have an account? <a href="/register">Register</a>
+				</div>
+			</div>
 		</div>
 	);
 }

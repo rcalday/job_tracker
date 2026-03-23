@@ -29,18 +29,27 @@ export default function RegisterPage() {
 	};
 
 	return (
-		<div className="register-page">
-			<h2>Register</h2>
-			<form onSubmit={handleSubmit}>
-				<input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-				<input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
-				<input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-				<button type="submit" disabled={loading}>
-					{loading ? "Registering..." : "Register"}
-				</button>
-				{error && <div className="error">{error}</div>}
-				{success && <div className="success">{success}</div>}
-			</form>
+		<div className="register-page card-centered">
+			<div className="card">
+				<div className="brand-header">
+					<span className="brand-logo">🔎</span>
+					<span className="brand-title">Job Tracker</span>
+				</div>
+				<h2>Create Account</h2>
+				<form onSubmit={handleSubmit}>
+					<input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
+					<input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+					<input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+					<button type="submit" disabled={loading}>
+						{loading ? "Registering..." : "Register"}
+					</button>
+					{error && <div className="error">{error}</div>}
+					{success && <div className="success">{success}</div>}
+				</form>
+				<div className="form-footer">
+					Already have an account? <a href="/login">Login</a>
+				</div>
+			</div>
 		</div>
 	);
 }
