@@ -1,0 +1,16 @@
+# Environment variables
+.env
+
+# Database files
+db.sql
+user.sql
+
+# Node modules
+node_modules/
+
+# Logs
+logs
+*.log
+
+# OS files
+.DS_Store
