@@ -10,8 +10,6 @@ import fetch from "node-fetch";
 router.get("/", authenticate, async (req, res) => {
 	try {
 		// Fetch from local DB
-		const dbResult = await db.query("SELECT * FROM jobs ORDER BY posted_at DESC");
-		const dbJobs = dbResult.rows;
 
 		// Fetch from Google Jobs API (using SerpAPI)
 		let googleJobs = [];
@@ -46,8 +44,17 @@ router.get("/", authenticate, async (req, res) => {
 			// Ignore Findwork API errors, log if needed
 		}
 
+		// Map Findwork jobs to consistent structure
+		const mappedFindworkJobs = findworkJobs.map((j) => ({
+			title: j.role,
+			company: j.company_name,
+			location: j.location,
+			...j,
+			source: "findwork",
+		}));
+
 		// Merge all jobs into a single array
-		const allJobs = [...dbJobs, ...googleJobs.map((j) => ({ ...j, source: "google" })), ...findworkJobs.map((j) => ({ ...j, source: "findwork" }))];
+		const allJobs = [...googleJobs.map((j) => ({ ...j, source: "google" })), ...mappedFindworkJobs];
 
 		res.json({ jobs: allJobs });
 	} catch (err) {

@@ -33,6 +33,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/auth/jobs", jobsRoute);
+app.use("/api/search", jobsRoute); // Alias for job search
 app.use("/auth/register", registerRoute);
 app.use("/auth/login", loginRoute);
 app.use("/auth/refresh", refreshRoute);

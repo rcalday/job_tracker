@@ -48,7 +48,8 @@ router.post("/", async (req, res) => {
 
 	res.cookie("accessToken", accessToken, accessCookieOptions);
 
-	res.json({ name: user.rows[0].login_name, accessToken, refreshToken });
+	// Only return user info, do not return tokens in JSON
+	res.json({ name: user.rows[0].login_name });
 });
 
 export default router;

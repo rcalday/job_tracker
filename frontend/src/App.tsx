@@ -32,8 +32,22 @@ function App() {
 	const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
 	useEffect(() => {
-		const hasToken = document.cookie.includes("accessToken=");
-		setIsAuthenticated(hasToken);
+		// Check authentication by calling backend /auth/me endpoint
+		const checkAuth = async () => {
+			try {
+				const res = await fetch("http://localhost:3000/auth/me", {
+					credentials: "include",
+				});
+				if (res.ok) {
+					setIsAuthenticated(true);
+				} else {
+					setIsAuthenticated(false);
+				}
+			} catch {
+				setIsAuthenticated(false);
+			}
+		};
+		checkAuth();
 	}, []);
 
 	if (isAuthenticated === null) return null;
