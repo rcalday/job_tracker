@@ -4,6 +4,45 @@ import Sidebar from "../components/Sidebar";
 export default function JobSearchPage() {
 	const [query, setQuery] = useState("");
 	const [results, setResults] = useState<any[]>([]);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [rowsPerPage] = useState(10);
+	const [savingId, setSavingId] = useState<string | null>(null);
+	const [saveError, setSaveError] = useState("");
+		// Pagination helpers
+		const indexOfLastRow = currentPage * rowsPerPage;
+		const indexOfFirstRow = indexOfLastRow - rowsPerPage;
+		const currentRows = results.slice(indexOfFirstRow, indexOfLastRow);
+		const totalPages = Math.ceil(results.length / rowsPerPage);
+
+		const handlePageChange = (page: number) => {
+			setCurrentPage(page);
+		};
+
+		// Save job application and open link
+		const handleViewAndSave = async (job: any) => {
+			setSavingId(job.job_url || job.id || job.title);
+			setSaveError("");
+			try {
+				// Save application (no resumeId, status default)
+				const res = await fetch("http://localhost:3000/auth/applications", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					credentials: "include",
+					body: JSON.stringify({
+						jobId: job.id || job.job_url || job.title, // fallback if no id
+						status: "Applied",
+						notes: null,
+					}),
+				});
+				if (!res.ok) throw new Error("Failed to save application");
+				// Open job link in new tab
+				window.open(job.job_url, "_blank", "noopener,noreferrer");
+			} catch (err: any) {
+				setSaveError("Failed to save application");
+			} finally {
+				setSavingId(null);
+			}
+		};
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 
@@ -66,22 +105,45 @@ export default function JobSearchPage() {
 									</tr>
 								</thead>
 								<tbody>
-									{results.map((job, idx) => (
-										<tr key={idx}>
+									{currentRows.map((job, idx) => (
+										<tr key={idx + (currentPage - 1) * rowsPerPage}>
 											<td>{job.title}</td>
 											<td>{job.company}</td>
 											<td>{job.location}</td>
 											<td>{job.source}</td>
 											<td>
-												<a href={job.job_url} target="_blank" rel="noopener noreferrer" className="btn btn-outline-primary btn-sm">
-													View
-												</a>
+												<button
+													className="btn btn-outline-primary btn-sm"
+													disabled={savingId === (job.job_url || job.id || job.title)}
+													onClick={() => handleViewAndSave(job)}
+												>
+													{savingId === (job.job_url || job.id || job.title) ? "Saving..." : "View"}
+												</button>
 											</td>
 										</tr>
 									))}
 								</tbody>
 							</table>
 							{!loading && results.length === 0 && <div className="text-center text-muted mt-3">No results found</div>}
+							{saveError && <div className="alert alert-danger py-2 my-2">{saveError}</div>}
+							{/* Pagination controls */}
+							{totalPages > 1 && (
+								<nav className="d-flex justify-content-center mt-3">
+									<ul className="pagination">
+										<li className={`page-item${currentPage === 1 ? " disabled" : ""}`}>
+											<button className="page-link" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>&laquo;</button>
+										</li>
+										{Array.from({ length: totalPages }, (_, i) => (
+											<li key={i + 1} className={`page-item${currentPage === i + 1 ? " active" : ""}`}>
+												<button className="page-link" onClick={() => handlePageChange(i + 1)}>{i + 1}</button>
+											</li>
+										))}
+										<li className={`page-item${currentPage === totalPages ? " disabled" : ""}`}>
+											<button className="page-link" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>&raquo;</button>
+										</li>
+									</ul>
+								</nav>
+							)}
 						</div>
 					</div>
 				</main>

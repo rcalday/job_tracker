@@ -6,6 +6,7 @@ import logoutRoute from "./auth/logout.js";
 import meRoute from "./auth/me.js";
 import registerRoute from "./auth/register.js";
 import jobsRoute from "./auth/jobs.js";
+import applicationsRoute from "./auth/applications.js";
 import cors from "cors";
 import dotenv from "dotenv";
 
@@ -39,5 +40,6 @@ app.use("/auth/login", loginRoute);
 app.use("/auth/refresh", refreshRoute);
 app.use("/auth/logout", logoutRoute);
 app.use("/auth/me", meRoute);
+app.use("/auth/applications", applicationsRoute);
 
 app.listen(3000, () => console.log("Server running on port 3000"));

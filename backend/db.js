@@ -22,7 +22,7 @@ if (DEVELOPMENT === "false") {
 		password: "061218@Abc",
 		host: "localhost",
 		port: 5432,
-		database: "react_login",
+		database: "job_tracker",
 		ssl: false,
 	});
 }

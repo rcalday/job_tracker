@@ -50,8 +50,10 @@ const DashboardPage = () => {
 			className="container-fluid"
 			style={{
 				minHeight: "100vh",
-				background: "radial-gradient(circle at 15% 25%, #ffe7d1 20%, transparent 60%), radial-gradient(circle at 90% 80%, #cbe7e3 30%, transparent 70%), #f7f8fa",
-			}}>
+				background:
+					"radial-gradient(circle at 15% 25%, #ffe7d1 20%, transparent 60%), radial-gradient(circle at 90% 80%, #cbe7e3 30%, transparent 70%), #f7f8fa",
+			}}
+		>
 			<div className="row min-vh-100">
 				{/* Sidebar */}
 				<Sidebar />
@@ -90,7 +92,10 @@ const DashboardPage = () => {
 						</div>
 						{/* Table */}
 						<div className="bg-white rounded-4 shadow-sm p-4">
-							<h2 className="mb-4 fw-bold" style={{ fontFamily: "serif", fontSize: "1.5rem", color: "#36394b", lineHeight: 1.1 }}>
+							<h2
+								className="mb-4 fw-bold"
+								style={{ fontFamily: "serif", fontSize: "1.5rem", color: "#36394b", lineHeight: 1.1 }}
+							>
 								Your Job Applications
 							</h2>
 							{loading ? (
@@ -119,7 +124,12 @@ const DashboardPage = () => {
 													<td>{job.source}</td>
 													<td>{job.posted_at ? new Date(job.posted_at).toLocaleDateString() : ""}</td>
 													<td>
-														<a href={job.job_url} target="_blank" rel="noopener noreferrer" className="btn btn-outline-primary btn-sm">
+														<a
+															href={job.job_url}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="btn btn-outline-primary btn-sm"
+														>
 															View
 														</a>
 													</td>
