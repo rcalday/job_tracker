@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import JobDetailModal from "../components/JobDetailModal";
 
 interface Job {
@@ -29,6 +29,7 @@ export default function JobSearchPage() {
 	const [saveError, setSaveError] = useState("");
 	const [googleError, setGoogleError] = useState("");
 	const [modalJob, setModalJob] = useState<Job | null>(null);
+	const [searched, setSearched] = useState(false);
 
 	const fetchJobs = async (page: number, q: string, loc: string, pageToken = "") => {
 		setLoading(true);
@@ -64,6 +65,7 @@ export default function JobSearchPage() {
 		e.preventDefault();
 		setCurrentPage(1);
 		setNextPageToken("");
+		setSearched(true);
 		fetchJobs(1, query, location, "");
 	};
 
@@ -71,6 +73,7 @@ export default function JobSearchPage() {
 		const token = newPage > currentPage ? nextPageToken : "";
 		setCurrentPage(newPage);
 		fetchJobs(newPage, query, location, token);
+		window.scrollTo({ top: 0, behavior: "smooth" });
 	};
 
 	const jobKey = (job: Job) => `${job.title}||${job.company}`;
@@ -114,147 +117,157 @@ export default function JobSearchPage() {
 
 	return (
 		<div style={{ maxWidth: 1100, margin: "0 auto" }}>
-			<h1 className="fw-bold mb-1" style={{ fontSize: "1.7rem", color: "#36394b" }}>
-				Search Jobs
-			</h1>
-			<p className="text-muted mb-4">Find job listings from Google Jobs and Findwork.</p>
+			{/* Page header */}
+			<div className="page-header">
+				<h1 className="page-title">Search Jobs</h1>
+				<p className="page-subtitle">Find job listings from Google Jobs and Findwork.</p>
+			</div>
 
 			{/* Search form */}
-			<form className="row g-2 mb-4 align-items-end" onSubmit={handleSearch}>
-				<div className="col-12 col-md-5">
-					<label className="form-label fw-semibold small">Job Title / Keywords</label>
-					<input type="text" className="form-control" placeholder="e.g. Frontend Developer" value={query} onChange={(e) => setQuery(e.target.value)} required />
+			<div className="card" style={{ marginBottom: 20 }}>
+				<div className="card-body">
+					<form onSubmit={handleSearch}>
+						<div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
+							<div className="form-group" style={{ flex: "2 1 220px", marginBottom: 0 }}>
+								<label className="form-label">Job Title / Keywords</label>
+								<div className="search-wrap">
+									<svg className="search-icon" width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+										<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+									</svg>
+									<input type="text" className="form-input" placeholder="e.g. Frontend Developer, Data Analyst" value={query} onChange={(e) => setQuery(e.target.value)} required />
+								</div>
+							</div>
+							<div className="form-group" style={{ flex: "1 1 180px", marginBottom: 0 }}>
+								<label className="form-label">Location</label>
+								<input type="text" className="form-input" placeholder="e.g. New York, Remote" value={location} onChange={(e) => setLocation(e.target.value)} />
+							</div>
+							<div style={{ flexShrink: 0, paddingBottom: 1 }}>
+								<button type="submit" className="btn btn-primary" style={{ height: 42 }} disabled={loading}>
+									{loading ? (
+										<>
+											<span className="spinner" style={{ borderColor: "rgba(255,255,255,.4)", borderTopColor: "#fff" }} /> Searching...
+										</>
+									) : (
+										<>
+											<svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+												<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+											</svg>
+											Search
+										</>
+									)}
+								</button>
+							</div>
+						</div>
+					</form>
 				</div>
-				<div className="col-12 col-md-4">
-					<label className="form-label fw-semibold small">Location</label>
-					<input type="text" className="form-control" placeholder="e.g. New York, Remote" value={location} onChange={(e) => setLocation(e.target.value)} />
-				</div>
-				<div className="col-12 col-md-3">
-					<button
-						type="submit"
-						className="btn w-100 fw-semibold"
-						style={{
-							background: "linear-gradient(90deg, #21867a 60%, #1b6e6b 100%)",
-							border: "none",
-							color: "#fff",
-							borderRadius: "0.5rem",
-						}}
-						disabled={loading}>
-						{loading ? (
-							<>
-								<span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
-								Searching...
-							</>
-						) : (
-							"Search"
-						)}
-					</button>
-				</div>
-			</form>
+			</div>
 
-			{error && <div className="alert alert-danger py-2 mb-3">{error}</div>}
-			{saveError && <div className="alert alert-danger py-2 mb-3">{saveError}</div>}
-			{googleError && <div className="alert alert-warning py-2 mb-3">⚠️ {googleError}</div>}
+			{/* Alerts */}
+			{error && <div className="alert alert-error">{error}</div>}
+			{saveError && <div className="alert alert-error">{saveError}</div>}
+			{googleError && <div className="alert alert-warning">âš ï¸ {googleError}</div>}
 
-			<div className="bg-white rounded-4 shadow-sm border">
-				<div className="table-responsive">
-					<table className="table table-hover align-middle mb-0">
-						<thead className="table-light">
-							<tr>
-								<th style={{ minWidth: 160 }}>Job Title</th>
-								<th style={{ minWidth: 120 }}>Company</th>
-								<th style={{ minWidth: 110 }}>Location</th>
-								<th style={{ minWidth: 200 }}>
-									Description{" "}
-									<span className="text-muted fw-normal" style={{ fontSize: "0.78rem" }}>
-										(click to expand)
-									</span>
-								</th>
-								<th>Source</th>
-								<th></th>
-							</tr>
-						</thead>
-						<tbody>
-							{results.length === 0 ? (
-								<tr>
-									<td colSpan={6} className="text-center text-muted py-5">
-										{currentPage > 1 ? "No results on this page." : "Search for jobs to see results."}
-									</td>
-								</tr>
-							) : (
-								results.map((job, idx) => {
-									const key = jobKey(job);
-									const saved = savedKeys.has(key);
-									return (
-										<tr key={idx}>
-											<td className="fw-medium">{job.title}</td>
-											<td>{job.company || "—"}</td>
-											<td>{job.location || "—"}</td>
-											<td>
-												{job.description ? (
-													<span className="text-muted" style={{ fontSize: "0.83rem", cursor: "pointer" }} title="Click to read full description" onClick={() => setModalJob(job)}>
-														{truncate(job.description)}
-													</span>
-												) : (
-													<span className="text-muted" style={{ fontSize: "0.83rem" }}>
-														—
-													</span>
-												)}
-											</td>
-											<td>
-												<span className="badge bg-light text-secondary border" style={{ fontSize: "0.78rem" }}>
-													{job.source}
-												</span>
-											</td>
-											<td>
-												<button className={`btn btn-sm ${saved ? "btn-success" : "btn-outline-primary"}`} disabled={savingKey === key} onClick={() => handleOpenJob(job)}>
-													{savingKey === key ? (
-														<>
-															<span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" />
-															Saving...
-														</>
-													) : saved ? (
-														"Applied ✓"
-													) : (
-														"Open Job"
-													)}
-												</button>
-											</td>
-										</tr>
-									);
-								})
-							)}
-						</tbody>
-					</table>
-				</div>
-
-				{(results.length > 0 || currentPage > 1) && (
-					<div className="d-flex justify-content-between align-items-center px-3 py-2 border-top">
-						<span className="text-muted small">
-							Page {currentPage} &mdash; {results.length} result{results.length !== 1 ? "s" : ""}
-						</span>
-						<nav>
-							<ul className="pagination pagination-sm mb-0">
-								<li className={`page-item${currentPage === 1 ? " disabled" : ""}`}>
-									<button className="page-link" onClick={() => handlePageChange(currentPage - 1)} disabled={loading}>
-										&laquo; Prev
-									</button>
-								</li>
-								<li className="page-item active">
-									<span className="page-link">{currentPage}</span>
-								</li>
-								<li className={`page-item${!hasMore ? " disabled" : ""}`}>
-									<button className="page-link" onClick={() => handlePageChange(currentPage + 1)} disabled={loading}>
-										Next &raquo;
-									</button>
-								</li>
-							</ul>
-						</nav>
+			{/* Results */}
+			<div className="card">
+				{!searched ? (
+					<div className="empty-state">
+						<svg width="48" height="48" viewBox="0 0 16 16" fill="var(--text-muted)">
+							<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+						</svg>
+						<p className="empty-title">Search for jobs above</p>
+						<p className="empty-desc">Enter a job title or keywords to find open positions.</p>
 					</div>
+				) : loading ? (
+					<div className="loading-center">
+						<span className="spinner-lg spinner" style={{ borderColor: "var(--border)", borderTopColor: "var(--primary)" }} />
+						Searching for jobs...
+					</div>
+				) : results.length === 0 ? (
+					<div className="empty-state">
+						<svg width="44" height="44" viewBox="0 0 16 16" fill="var(--text-muted)">
+							<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+						</svg>
+						<p className="empty-title">No results found</p>
+						<p className="empty-desc">Try different keywords or a broader location.</p>
+					</div>
+				) : (
+					<>
+						<div className="table-wrap">
+							<table className="data-table">
+								<thead>
+									<tr>
+										<th style={{ minWidth: 160 }}>Job Title</th>
+										<th style={{ minWidth: 120 }}>Company</th>
+										<th style={{ minWidth: 110 }}>Location</th>
+										<th style={{ minWidth: 200 }}>Description</th>
+										<th>Source</th>
+										<th style={{ minWidth: 110 }}></th>
+									</tr>
+								</thead>
+								<tbody>
+									{results.map((job, idx) => {
+										const key = jobKey(job);
+										const saved = savedKeys.has(key);
+										return (
+											<tr key={idx}>
+												<td className="td-title">{job.title}</td>
+												<td>{job.company || "—"}</td>
+												<td className="td-muted">{job.location || "—"}</td>
+												<td>
+													{job.description ? (
+														<span className="td-desc" title="Click to read full description" onClick={() => setModalJob(job)}>
+															{truncate(job.description)}
+														</span>
+													) : (
+														<span className="td-muted">—</span>
+													)}
+												</td>
+												<td>
+													<span className="badge badge-source">{job.source}</span>
+												</td>
+												<td>
+													{saved ? (
+														<span className="btn btn-applied btn-sm" style={{ cursor: "default", pointerEvents: "none" }}>
+															âœ“ Applied
+														</span>
+													) : (
+														<button className="btn btn-primary btn-sm" disabled={savingKey === key} onClick={() => handleOpenJob(job)}>
+															{savingKey === key ? (
+																<>
+																	<span className="spinner" style={{ borderColor: "rgba(255,255,255,.4)", borderTopColor: "#fff", width: 12, height: 12 }} /> Saving...
+																</>
+															) : (
+																"Apply ↗"
+															)}
+														</button>
+													)}
+												</td>
+											</tr>
+										);
+									})}
+								</tbody>
+							</table>
+						</div>
+
+						{/* Pagination */}
+						<div className="pagination-bar">
+							<span className="pagination-info">
+								Page {currentPage} Â· {results.length} result{results.length !== 1 ? "s" : ""}
+							</span>
+							<div className="pagination-controls">
+								<button className="pg-btn" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1 || loading}>
+									‹ Prev
+								</button>
+								<button className="pg-btn pg-active">{currentPage}</button>
+								<button className="pg-btn" onClick={() => handlePageChange(currentPage + 1)} disabled={!hasMore || loading}>
+									Next ›
+								</button>
+							</div>
+						</div>
+					</>
 				)}
 			</div>
 
-			{/* Job Detail Modal */}
 			{modalJob && <JobDetailModal job={modalJob} onClose={() => setModalJob(null)} onOpenJob={() => handleOpenJob(modalJob)} />}
 		</div>
 	);

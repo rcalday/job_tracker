@@ -16,16 +16,34 @@ interface Application {
 const STATUSES = ["Saved", "Applied", "Interview", "Rejected"] as const;
 const PAGE_SIZE = 10;
 
-const STATUS_COLORS: Record<string, string> = {
-	Applied: "primary",
-	Interview: "success",
-	Rejected: "danger",
-	Saved: "secondary",
-};
+function statusClass(status: string) {
+	switch (status) {
+		case "Applied":
+			return "badge badge-applied";
+		case "Interview":
+			return "badge badge-interview";
+		case "Rejected":
+			return "badge badge-rejected";
+		case "Saved":
+			return "badge badge-saved";
+		default:
+			return "badge badge-saved";
+	}
+}
 
-function truncate(text: string, max = 90) {
+function truncate(text: string, max = 85) {
 	if (!text) return "";
-	return text.length > max ? text.slice(0, max) + "â€¦" : text;
+	return text.length > max ? text.slice(0, max) + "…" : text;
+}
+
+function buildPageNumbers(page: number, totalPages: number): (number | "…")[] {
+	const pages: (number | "…")[] = [];
+	const range = Array.from({ length: totalPages }, (_, i) => i + 1).filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2);
+	range.forEach((p, idx) => {
+		if (idx > 0 && p - (range[idx - 1] as number) > 1) pages.push("…");
+		pages.push(p);
+	});
+	return pages;
 }
 
 export default function MyApplicationsPage() {
@@ -35,7 +53,6 @@ export default function MyApplicationsPage() {
 	const [modalJob, setModalJob] = useState<ModalJob | null>(null);
 	const [updatingId, setUpdatingId] = useState<number | null>(null);
 
-	// Search / filter / pagination
 	const [searchInput, setSearchInput] = useState("");
 	const [search, setSearch] = useState("");
 	const [statusFilter, setStatusFilter] = useState("");
@@ -68,7 +85,6 @@ export default function MyApplicationsPage() {
 
 	useEffect(() => {
 		let cancelled = false;
-
 		async function fetchApplications() {
 			setLoading(true);
 			setError("");
@@ -79,9 +95,7 @@ export default function MyApplicationsPage() {
 				params.set("page", String(page));
 				params.set("limit", String(PAGE_SIZE));
 
-				const res = await fetch(`http://localhost:3000/auth/applications?${params}`, {
-					credentials: "include",
-				});
+				const res = await fetch(`http://localhost:3000/auth/applications?${params}`, { credentials: "include" });
 				if (!res.ok) throw new Error("Failed to load applications");
 				const data = await res.json();
 				if (cancelled) return;
@@ -94,7 +108,6 @@ export default function MyApplicationsPage() {
 				if (!cancelled) setLoading(false);
 			}
 		}
-
 		fetchApplications();
 		return () => {
 			cancelled = true;
@@ -121,114 +134,102 @@ export default function MyApplicationsPage() {
 
 	const isFiltered = search || statusFilter;
 
-	// Build page numbers with ellipsis
-	function buildPageNumbers(): (number | "â€¦")[] {
-		const pages: (number | "â€¦")[] = [];
-		const range = Array.from({ length: totalPages }, (_, i) => i + 1).filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2);
-		range.forEach((p, idx) => {
-			if (idx > 0 && p - (range[idx - 1] as number) > 1) pages.push("â€¦");
-			pages.push(p);
-		});
-		return pages;
-	}
-
 	return (
-		<div className="p-4">
-			<h1 className="fs-4 fw-bold mb-1">My Applications</h1>
-			<p className="text-muted mb-4" style={{ fontSize: "0.92rem" }}>
-				Track and manage every job you've applied to. Update statuses as your application progresses.
-			</p>
-
-			{/* Search & Filter Bar */}
-			<div className="bg-white rounded-4 shadow-sm px-4 py-3 border mb-3 d-flex flex-wrap gap-2 align-items-center">
-				{/* Search input */}
-				<div className="input-group" style={{ maxWidth: 320 }}>
-					<span className="input-group-text bg-transparent border-end-0">
-						<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" className="text-muted">
-							<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
-						</svg>
-					</span>
-					<input type="text" className="form-control border-start-0" placeholder="Search title, company, locationâ€¦" value={searchInput} onChange={(e) => handleSearchChange(e.target.value)} />
-					{searchInput && (
-						<button className="btn btn-outline-secondary" type="button" onClick={() => handleSearchChange("")} aria-label="Clear search">
-							âœ•
-						</button>
-					)}
-				</div>
-
-				{/* Status filter */}
-				<select className="form-select" style={{ width: "auto" }} value={statusFilter} onChange={(e) => handleStatusFilter(e.target.value)} aria-label="Filter by status">
-					<option value="">All statuses</option>
-					{STATUSES.map((s) => (
-						<option key={s} value={s}>
-							{s}
-						</option>
-					))}
-				</select>
-
-				{isFiltered && (
-					<button className="btn btn-outline-secondary btn-sm" onClick={clearFilters}>
-						Clear filters
-					</button>
-				)}
-
-				<span className="ms-auto text-muted" style={{ fontSize: "0.85rem" }}>
-					{loading ? "â€¦" : `${total} result${total !== 1 ? "s" : ""}`}
-				</span>
+		<div style={{ maxWidth: 1100, margin: "0 auto" }}>
+			{/* Page header */}
+			<div className="page-header">
+				<h1 className="page-title">My Applications</h1>
+				<p className="page-subtitle">Track and manage every job you've applied to.</p>
 			</div>
 
-			{/* Table Card */}
-			<div className="bg-white rounded-4 shadow-sm p-4 border">
+			{/* Filter bar */}
+			<div className="card" style={{ marginBottom: 16 }}>
+				<div style={{ display: "flex", flexWrap: "wrap", gap: 10, padding: "14px 20px", alignItems: "center" }}>
+					{/* Search */}
+					<div className="search-wrap" style={{ flex: "1 1 260px" }}>
+						<svg className="search-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+							<path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" />
+						</svg>
+						<input type="text" className="form-input" placeholder="Search title, company, location…" value={searchInput} onChange={(e) => handleSearchChange(e.target.value)} />
+						{searchInput && (
+							<button className="search-clear" onClick={() => handleSearchChange("")} aria-label="Clear search">
+								<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+									<path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854z" />
+								</svg>
+							</button>
+						)}
+					</div>
+
+					{/* Status filter */}
+					<select className="form-select" style={{ width: "auto", flexShrink: 0 }} value={statusFilter} onChange={(e) => handleStatusFilter(e.target.value)} aria-label="Filter by status">
+						<option value="">All statuses</option>
+						{STATUSES.map((s) => (
+							<option key={s} value={s}>
+								{s}
+							</option>
+						))}
+					</select>
+
+					{isFiltered && (
+						<button className="btn btn-secondary btn-sm" onClick={clearFilters}>
+							Clear filters
+						</button>
+					)}
+
+					<span className="ms-auto" style={{ fontSize: "0.83rem", color: "var(--text-muted)", flexShrink: 0 }}>
+						{loading ? "…" : `${total} result${total !== 1 ? "s" : ""}`}
+					</span>
+				</div>
+			</div>
+
+			{/* Table card */}
+			<div className="card">
 				{loading ? (
-					<div className="text-center text-secondary py-5">
-						<div className="spinner-border spinner-border-sm me-2" role="status" />
-						Loading applicationsâ€¦
+					<div className="loading-center">
+						<span className="spinner" />
+						Loading applications…
 					</div>
 				) : error ? (
-					<div className="alert alert-danger">{error}</div>
+					<div className="card-body">
+						<div className="alert alert-error">{error}</div>
+					</div>
 				) : applications.length === 0 ? (
-					<div className="text-center text-muted py-5">
-						<svg width="40" height="40" viewBox="0 0 16 16" fill="currentColor" className="mb-3 opacity-25">
+					<div className="empty-state">
+						<svg width="44" height="44" viewBox="0 0 16 16" fill="var(--text-muted)">
 							<path d="M6 1a1 1 0 0 0-1 1v1H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-1V2a1 1 0 0 0-1-1H6zM5 3V2h6v1H5zm-1 2h8a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
 						</svg>
-						<div className="mb-1">{isFiltered ? "No applications match your filters." : "No applications yet."}</div>
+						<p className="empty-title">{isFiltered ? "No applications match your filters." : "No applications yet."}</p>
 						{!isFiltered && (
-							<small>
+							<p className="empty-desc">
 								Head to <strong>Search Jobs</strong> to save your first application.
-							</small>
+							</p>
 						)}
 					</div>
 				) : (
 					<>
-						<div className="table-responsive">
-							<table className="table table-hover align-middle mb-0">
-								<thead className="table-light">
+						<div className="table-wrap">
+							<table className="data-table">
+								<thead>
 									<tr>
 										<th>Job Title</th>
 										<th>Company</th>
 										<th>Location</th>
-										<th>
-											Description{" "}
-											<span className="text-muted fw-normal" style={{ fontSize: "0.78rem" }}>
-												(click to expand)
-											</span>
-										</th>
-										<th>Status</th>
-										<th>Date</th>
+										<th>Description</th>
+										<th style={{ minWidth: 180 }}>Status</th>
+										<th style={{ whiteSpace: "nowrap" }}>Date</th>
 										<th></th>
 									</tr>
 								</thead>
 								<tbody>
 									{applications.map((app) => (
 										<tr key={app.id}>
-											<td className="fw-medium">{app.job_title}</td>
-											<td>{app.company || "â€”"}</td>
-											<td>{app.location || "â€”"}</td>
+											<td className="td-title">{app.job_title}</td>
+											<td>{app.company || "—"}</td>
+											<td className="td-muted">{app.location || "—"}</td>
 											<td>
 												{app.description ? (
 													<span
-														className="text-muted"
-														style={{ fontSize: "0.83rem", cursor: "pointer" }}
+														className="td-desc"
 														title="Click to read full description"
 														onClick={() =>
 															setModalJob({
@@ -241,17 +242,13 @@ export default function MyApplicationsPage() {
 														{truncate(app.description)}
 													</span>
 												) : (
-													<span className="text-muted" style={{ fontSize: "0.83rem" }}>
-														â€”
-													</span>
+													<span className="td-muted">—</span>
 												)}
 											</td>
-											<td style={{ minWidth: 140 }}>
-												<div className="d-flex align-items-center gap-2">
-													<span className={`badge bg-${STATUS_COLORS[app.status] ?? "secondary"}`} style={{ fontSize: "0.72rem", minWidth: 62 }}>
-														{app.status}
-													</span>
-													<select className="form-select form-select-sm" style={{ fontSize: "0.8rem", width: "auto" }} value={app.status} disabled={updatingId === app.id} onChange={(e) => handleStatusChange(app.id, e.target.value)} aria-label="Update status">
+											<td>
+												<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+													<span className={statusClass(app.status)}>{app.status}</span>
+													<select className="form-select" style={{ fontSize: "0.82rem", padding: "4px 8px", width: "auto" }} value={app.status} disabled={updatingId === app.id} onChange={(e) => handleStatusChange(app.id, e.target.value)} aria-label="Update status">
 														{STATUSES.map((s) => (
 															<option key={s} value={s}>
 																{s}
@@ -260,11 +257,13 @@ export default function MyApplicationsPage() {
 													</select>
 												</div>
 											</td>
-											<td style={{ fontSize: "0.85rem", whiteSpace: "nowrap" }}>{app.applied_at ? new Date(app.applied_at).toLocaleDateString() : "â€”"}</td>
+											<td className="td-muted" style={{ whiteSpace: "nowrap" }}>
+												{app.applied_at ? new Date(app.applied_at).toLocaleDateString() : "—"}
+											</td>
 											<td>
 												{app.job_link && (
-													<a href={app.job_link} target="_blank" rel="noopener noreferrer" className="btn btn-outline-secondary btn-sm">
-														Open â†—
+													<a href={app.job_link} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
+														Open ↗
 													</a>
 												)}
 											</td>
@@ -276,47 +275,35 @@ export default function MyApplicationsPage() {
 
 						{/* Pagination */}
 						{totalPages > 1 && (
-							<div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top flex-wrap gap-2">
-								<small className="text-muted">
-									Page {page} of {totalPages} &middot; {total} total
-								</small>
-								<nav aria-label="Applications pagination">
-									<ul className="pagination pagination-sm mb-0">
-										<li className={`page-item ${page === 1 ? "disabled" : ""}`}>
-											<button className="page-link" onClick={() => setPage(1)} disabled={page === 1}>
-												Â«
+							<div className="pagination-bar">
+								<span className="pagination-info">
+									Page {page} of {totalPages} · {total} total
+								</span>
+								<div className="pagination-controls">
+									<button className="pg-btn" onClick={() => setPage(1)} disabled={page === 1} title="First page">
+										«
+									</button>
+									<button className="pg-btn" onClick={() => setPage((p) => p - 1)} disabled={page === 1}>
+										‹
+									</button>
+									{buildPageNumbers(page, totalPages).map((item, idx) =>
+										item === "…" ? (
+											<button key={`ell-${idx}`} className="pg-btn" disabled>
+												…
 											</button>
-										</li>
-										<li className={`page-item ${page === 1 ? "disabled" : ""}`}>
-											<button className="page-link" onClick={() => setPage((p) => p - 1)} disabled={page === 1}>
-												â€¹
+										) : (
+											<button key={item} className={`pg-btn${item === page ? " pg-active" : ""}`} onClick={() => setPage(item as number)}>
+												{item}
 											</button>
-										</li>
-										{buildPageNumbers().map((item, idx) =>
-											item === "â€¦" ? (
-												<li key={`ell-${idx}`} className="page-item disabled">
-													<span className="page-link">â€¦</span>
-												</li>
-											) : (
-												<li key={item} className={`page-item ${item === page ? "active" : ""}`}>
-													<button className="page-link" onClick={() => setPage(item as number)}>
-														{item}
-													</button>
-												</li>
-											),
-										)}
-										<li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
-											<button className="page-link" onClick={() => setPage((p) => p + 1)} disabled={page === totalPages}>
-												â€º
-											</button>
-										</li>
-										<li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
-											<button className="page-link" onClick={() => setPage(totalPages)} disabled={page === totalPages}>
-												Â»
-											</button>
-										</li>
-									</ul>
-								</nav>
+										),
+									)}
+									<button className="pg-btn" onClick={() => setPage((p) => p + 1)} disabled={page === totalPages}>
+										›
+									</button>
+									<button className="pg-btn" onClick={() => setPage(totalPages)} disabled={page === totalPages} title="Last page">
+										»
+									</button>
+								</div>
 							</div>
 						)}
 					</>

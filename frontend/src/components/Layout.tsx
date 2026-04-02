@@ -1,14 +1,19 @@
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 
 export default function Layout() {
+	const [sidebarOpen, setSidebarOpen] = useState(false);
+
 	return (
-		<div className="d-flex flex-column" style={{ minHeight: "100vh", background: "#f7f8fa" }}>
-			<Navbar />
-			<div className="d-flex flex-grow-1" style={{ minHeight: 0 }}>
-				<Sidebar />
-				<main className="flex-grow-1 p-3 p-md-4" style={{ minWidth: 0 }}>
+		<div className="app-shell">
+			<Navbar onMenuToggle={() => setSidebarOpen((v) => !v)} />
+			<div className="app-body">
+				{/* Mobile overlay */}
+				<div className={`sidebar-overlay${sidebarOpen ? " sidebar-open" : ""}`} onClick={() => setSidebarOpen(false)} />
+				<Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+				<main className="app-main">
 					<Outlet />
 				</main>
 			</div>

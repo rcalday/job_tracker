@@ -1,5 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 
+interface SidebarProps {
+	isOpen: boolean;
+	onClose: () => void;
+}
+
 const navLinks = [
 	{
 		to: "/dashboard",
@@ -41,14 +46,26 @@ const navLinks = [
 	},
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 	const location = useLocation();
 	return (
-		<nav className="d-none d-md-flex flex-column bg-white border-end" style={{ width: 220, minHeight: "calc(100vh - 60px)", position: "sticky", top: 60, height: "calc(100vh - 60px)", flexShrink: 0 }}>
-			<ul className="nav nav-pills flex-column px-3 pt-4 gap-1 flex-grow-1">
+		<nav className={`app-sidebar${isOpen ? " sidebar-open" : ""}`}>
+			{/* Mobile header with close button */}
+			<div className="sidebar-mobile-header">
+				<span style={{ fontWeight: 700, fontSize: "1rem" }}>Menu</span>
+				<button className="btn btn-ghost btn-icon" onClick={onClose} aria-label="Close menu">
+					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+						<line x1="18" y1="6" x2="6" y2="18" />
+						<line x1="6" y1="6" x2="18" y2="18" />
+					</svg>
+				</button>
+			</div>
+
+			<ul className="sidebar-nav">
+				<li className="sidebar-nav-label">Navigation</li>
 				{navLinks.map((link) => (
-					<li className="nav-item" key={link.to}>
-						<Link to={link.to} className={`nav-link d-flex align-items-center gap-2${location.pathname === link.to ? " active" : " text-secondary"}`} style={{ borderRadius: 8, fontWeight: 500, fontSize: "0.92rem" }}>
+					<li key={link.to}>
+						<Link to={link.to} className={`sidebar-link${location.pathname === link.to ? " active" : ""}`} onClick={onClose}>
 							{link.icon}
 							{link.label}
 						</Link>
