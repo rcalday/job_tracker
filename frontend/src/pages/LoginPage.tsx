@@ -1,6 +1,8 @@
 ﻿import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import API from "../api";
+import type { AxiosError } from "axios";
 
 export default function LoginPage() {
 	const [username, setUsername] = useState("");
@@ -17,26 +19,14 @@ export default function LoginPage() {
 		setError("");
 
 		try {
-			const res = await fetch("http://localhost:3000/auth/login", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				credentials: "include",
-				body: JSON.stringify({ username, password, remember_me: rememberMe }),
-			});
+			await API.post("/auth/login", { username, password, remember_me: rememberMe });
 
-			if (!res.ok) {
-				const data = await res.json().catch(() => ({}));
-				throw new Error(data.error || "Invalid credentials");
-			}
-
-			const meRes = await fetch("http://localhost:3000/auth/me", { credentials: "include" });
-			if (meRes.ok) {
-				const meData = await meRes.json();
-				setUser(meData.user);
-			}
+			const meRes = await API.get("/auth/me");
+			setUser(meRes.data.user);
 			navigate("/dashboard");
 		} catch (err: unknown) {
-			setError(err instanceof Error ? err.message : "Something went wrong");
+			const axiosErr = err as AxiosError<{ error?: string }>;
+			setError(axiosErr.response?.data?.error ?? (err instanceof Error ? err.message : "Something went wrong"));
 		} finally {
 			setLoading(false);
 		}

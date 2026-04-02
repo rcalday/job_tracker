@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useAuth } from "../context/AuthContext";
 import JobDetailModal from "../components/JobDetailModal";
 import type { ModalJob } from "../components/JobDetailModal";
+import API from "../api";
 
 interface Application {
 	id: number;
@@ -52,20 +53,13 @@ export default function DashboardPage() {
 				setLoading(true);
 				setError("");
 
-				const [statsRes, appsRes] = await Promise.all([fetch("http://localhost:3000/auth/applications/stats", { credentials: "include" }), fetch("http://localhost:3000/auth/applications", { credentials: "include" })]);
+				const [statsRes, appsRes] = await Promise.all([API.get("/auth/applications/stats"), API.get("/auth/applications")]);
 
-				if (statsRes.ok) {
-					const statsData = await statsRes.json();
-					setWeekCount(statsData.week ?? 0);
-					setMonthCount(statsData.month ?? 0);
-					setYearCount(statsData.year ?? 0);
-					setChartData(statsData.chart ?? []);
-				}
-
-				if (appsRes.ok) {
-					const appsData = await appsRes.json();
-					setApplications(appsData.applications ?? []);
-				}
+				setWeekCount(statsRes.data.week ?? 0);
+				setMonthCount(statsRes.data.month ?? 0);
+				setYearCount(statsRes.data.year ?? 0);
+				setChartData(statsRes.data.chart ?? []);
+				setApplications(appsRes.data.applications ?? []);
 			} catch {
 				setError("Failed to load data. Please try again.");
 			} finally {

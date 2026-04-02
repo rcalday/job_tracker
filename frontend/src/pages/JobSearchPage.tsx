@@ -1,5 +1,7 @@
 ﻿import { useState, useEffect } from "react";
 import JobDetailModal from "../components/JobDetailModal";
+import API from "../api";
+import type { AxiosError } from "axios";
 
 interface Job {
 	title: string;
@@ -72,8 +74,8 @@ export default function JobSearchPage() {
 
 	// Load saved settings on mount
 	useEffect(() => {
-		fetch("http://localhost:3000/auth/search-settings", { credentials: "include" })
-			.then((r) => (r.ok ? r.json() : null))
+		API.get("/auth/search-settings")
+			.then((r) => r.data)
 			.then((data) => {
 				if (data?.settings) {
 					setSettings(data.settings);
@@ -101,17 +103,12 @@ export default function JobSearchPage() {
 			if (pageToken) params.set("next_page_token", pageToken);
 			params.set("sources", buildSourcesParam(src));
 
-			const res = await fetch(`http://localhost:3000/api/search?${params.toString()}`, {
-				credentials: "include",
-			});
-			if (!res.ok) throw new Error("Search failed");
-
-			const data = await res.json();
-			setResults(data.jobs ?? []);
-			setHasMore(data.hasMore ?? false);
-			setNextPageToken(data.nextPageToken ?? "");
-			if (data.googleError) setGoogleError(`Google Jobs unavailable: ${data.googleError}`);
-			if (data.joobleError) setJoobleError(`Jooble unavailable: ${data.joobleError}`);
+			const res = await API.get(`/api/search?${params.toString()}`);
+			setResults(res.data.jobs ?? []);
+			setHasMore(res.data.hasMore ?? false);
+			setNextPageToken(res.data.nextPageToken ?? "");
+			if (res.data.googleError) setGoogleError(`Google Jobs unavailable: ${res.data.googleError}`);
+			if (res.data.joobleError) setJoobleError(`Jooble unavailable: ${res.data.joobleError}`);
 		} catch (err: unknown) {
 			setError(err instanceof Error ? err.message : "Search failed");
 		} finally {
@@ -145,24 +142,15 @@ export default function JobSearchPage() {
 		setSaveError("");
 
 		try {
-			const res = await fetch("http://localhost:3000/auth/applications", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				credentials: "include",
-				body: JSON.stringify({
-					job_title: job.title,
-					company: job.company || null,
-					location: job.location || null,
-					job_link: job.job_url || null,
-					description: job.description || null,
-					status: "Applied",
-				}),
+			const res = await API.post("/auth/applications", {
+				job_title: job.title,
+				company: job.company || null,
+				location: job.location || null,
+				job_link: job.job_url || null,
+				description: job.description || null,
+				status: "Applied",
 			});
-
-			if (!res.ok) {
-				const d = await res.json().catch(() => ({}));
-				throw new Error((d as { error?: string }).error || "Failed to save application");
-			}
+			void res;
 
 			setSavedKeys((prev) => new Set(prev).add(key));
 			setResults((prev) => prev.filter((j) => jobKey(j) !== key));
@@ -170,7 +158,8 @@ export default function JobSearchPage() {
 				window.open(job.job_url, "_blank", "noopener,noreferrer");
 			}
 		} catch (err: unknown) {
-			setSaveError(err instanceof Error ? err.message : "Failed to save application");
+			const axiosErr = err as AxiosError<{ error?: string }>;
+			setSaveError(axiosErr.response?.data?.error ?? (err instanceof Error ? err.message : "Failed to save application"));
 		} finally {
 			setSavingKey(null);
 		}
@@ -186,20 +175,12 @@ export default function JobSearchPage() {
 		setSettingsSaving(true);
 		setSettingsError("");
 		try {
-			const res = await fetch("http://localhost:3000/auth/search-settings", {
-				method: "PUT",
-				headers: { "Content-Type": "application/json" },
-				credentials: "include",
-				body: JSON.stringify({ enabled_sources: draftSettings }),
-			});
-			if (!res.ok) {
-				const d = await res.json().catch(() => ({}));
-				throw new Error((d as { error?: string }).error || `Save failed (${res.status})`);
-			}
+			await API.put("/auth/search-settings", { enabled_sources: draftSettings });
 			setSettings(draftSettings);
 			setShowSettings(false);
 		} catch (err: unknown) {
-			setSettingsError(err instanceof Error ? err.message : "Failed to save settings");
+			const axiosErr = err as AxiosError<{ error?: string }>;
+			setSettingsError(axiosErr.response?.data?.error ?? (err instanceof Error ? err.message : "Failed to save settings"));
 		} finally {
 			setSettingsSaving(false);
 		}

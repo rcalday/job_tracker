@@ -1,5 +1,7 @@
 ﻿import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import API from "../api";
+import type { AxiosError } from "axios";
 
 export default function RegisterPage() {
 	const [name, setName] = useState("");
@@ -16,20 +18,11 @@ export default function RegisterPage() {
 		setError("");
 
 		try {
-			const res = await fetch("http://localhost:3000/auth/register", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ name, username, email, password }),
-			});
-
-			if (!res.ok) {
-				const data = await res.json().catch(() => ({}));
-				throw new Error(data.error || "Registration failed");
-			}
-
+			await API.post("/auth/register", { name, username, email, password });
 			navigate("/login");
 		} catch (err: unknown) {
-			setError(err instanceof Error ? err.message : "Registration failed");
+			const axiosErr = err as AxiosError<{ error?: string }>;
+			setError(axiosErr.response?.data?.error ?? (err instanceof Error ? err.message : "Registration failed"));
 		} finally {
 			setLoading(false);
 		}

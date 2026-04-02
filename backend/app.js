@@ -23,7 +23,7 @@ const app = express();
 if (process.env.DEVELOPMENT === "false") {
 	app.use(
 		cors({
-			origin: "https://reactlogin.carlosalday61.workers.dev",
+			origin: "https://jobtracker.carlosalday61.workers.dev",
 			credentials: true,
 		}),
 	);

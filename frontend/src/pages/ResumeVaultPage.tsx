@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState } from "react";
+import API from "../api";
 
 interface Resume {
 	id: number;
@@ -27,10 +28,8 @@ export default function ResumeVaultPage() {
 	const fetchResumes = async () => {
 		try {
 			setLoading(true);
-			const res = await fetch("http://localhost:3000/auth/resume", { credentials: "include" });
-			if (!res.ok) throw new Error("Failed to load resumes");
-			const data = await res.json();
-			setResumes(data.resumes ?? []);
+			const res = await API.get("/auth/resume");
+			setResumes(res.data.resumes ?? []);
 		} catch (err: unknown) {
 			setError(err instanceof Error ? err.message : "Failed to load resumes");
 		} finally {
@@ -59,22 +58,17 @@ export default function ResumeVaultPage() {
 		formData.append("resume", file);
 
 		try {
-			const res = await fetch("http://localhost:3000/auth/resume/upload", {
-				method: "POST",
-				credentials: "include",
-				body: formData,
-			});
+			const formData = new FormData();
+			formData.append("resume", file);
 
-			if (!res.ok) {
-				const d = await res.json().catch(() => ({}));
-				throw new Error((d as { error?: string }).error || "Upload failed");
-			}
+			await API.post("/auth/resume/upload", formData);
 
 			if (fileRef.current) fileRef.current.value = "";
 			setSelectedFile(null);
 			await fetchResumes();
 		} catch (err: unknown) {
-			setUploadError(err instanceof Error ? err.message : "Upload failed");
+			const msg = (err as import("axios").AxiosError<{ error?: string }>).response?.data?.error;
+			setUploadError(msg ?? (err instanceof Error ? err.message : "Upload failed"));
 		} finally {
 			setUploading(false);
 		}
@@ -84,11 +78,7 @@ export default function ResumeVaultPage() {
 		if (!confirm("Delete this resume?")) return;
 		setDeletingId(id);
 		try {
-			const res = await fetch(`http://localhost:3000/auth/resume/${id}`, {
-				method: "DELETE",
-				credentials: "include",
-			});
-			if (!res.ok) throw new Error("Delete failed");
+			await API.delete(`/auth/resume/${id}`);
 			setResumes((prev) => prev.filter((r) => r.id !== id));
 		} catch {
 			setError("Failed to delete resume");
@@ -176,7 +166,7 @@ export default function ResumeVaultPage() {
 										<div className="resume-date">Uploaded {new Date(resume.created_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}</div>
 									</div>
 									<div className="resume-actions">
-										<a href={`http://localhost:3000${resume.file_path}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
+										<a href={`${import.meta.env.VITE_DEVELOPMENT ? "http://localhost:3000" : import.meta.env.VITE_API_URL}${resume.file_path}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
 											View ↗
 										</a>
 										<button className="btn btn-sm" style={{ color: "var(--danger)", borderColor: "var(--danger)", background: "transparent", border: "1.5px solid var(--danger)" }} onClick={() => handleDelete(resume.id)} disabled={deletingId === resume.id}>

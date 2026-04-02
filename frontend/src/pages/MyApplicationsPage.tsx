@@ -1,6 +1,7 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import JobDetailModal from "../components/JobDetailModal";
 import type { ModalJob } from "../components/JobDetailModal";
+import API from "../api";
 
 interface Application {
 	id: number;
@@ -101,13 +102,11 @@ export default function MyApplicationsPage() {
 				params.set("page", String(page));
 				params.set("limit", String(pageSize));
 
-				const res = await fetch(`http://localhost:3000/auth/applications?${params}`, { credentials: "include" });
-				if (!res.ok) throw new Error("Failed to load applications");
-				const data = await res.json();
+				const res = await API.get(`/auth/applications?${params}`);
 				if (cancelled) return;
-				setApplications(data.applications ?? []);
-				setTotal(data.total ?? 0);
-				setTotalPages(data.totalPages ?? 1);
+				setApplications(res.data.applications ?? []);
+				setTotal(res.data.total ?? 0);
+				setTotalPages(res.data.totalPages ?? 1);
 			} catch (err) {
 				if (!cancelled) setError(err instanceof Error ? err.message : "An error occurred");
 			} finally {
@@ -123,13 +122,7 @@ export default function MyApplicationsPage() {
 	async function handleStatusChange(id: number, newStatus: string) {
 		setUpdatingId(id);
 		try {
-			const res = await fetch(`http://localhost:3000/auth/applications/${id}/status`, {
-				method: "PATCH",
-				headers: { "Content-Type": "application/json" },
-				credentials: "include",
-				body: JSON.stringify({ status: newStatus }),
-			});
-			if (!res.ok) throw new Error("Failed to update status");
+			await API.patch(`/auth/applications/${id}/status`, { status: newStatus });
 			setApplications((prev) => prev.map((app) => (app.id === id ? { ...app, status: newStatus } : app)));
 		} catch {
 			// keep UI consistent
