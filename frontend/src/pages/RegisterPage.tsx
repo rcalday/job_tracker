@@ -41,13 +41,16 @@ export default function RegisterPage() {
 			<div className="auth-panel-left">
 				<div style={{ maxWidth: 380 }}>
 					<div className="auth-logo" style={{ marginBottom: 40 }}>
-						<span className="auth-logo-icon">💼</span>
-						<span className="auth-logo-name" style={{ color: "#fff" }}>Job Tracker</span>
+						<img src="/job_tracker.png" alt="Job Tracker" style={{ width: "50%", height: "50%", objectFit: "contain" }} />{" "}
 					</div>
-					<div className="auth-panel-headline">Start your<br />job search<br />journey.</div>
-					<div className="auth-panel-sub">
-						Join thousands of job seekers who use Job Tracker to land their dream role.
+					<div className="auth-panel-headline">
+						Start your
+						<br />
+						job search
+						<br />
+						journey.
 					</div>
+					<div className="auth-panel-sub">Join thousands of job seekers who use Job Tracker to land their dream role.</div>
 					<div style={{ marginTop: 36, display: "flex", flexDirection: "column", gap: 4 }}>
 						{[
 							{ icon: "✅", text: "Free to use, no credit card required" },
@@ -67,8 +70,7 @@ export default function RegisterPage() {
 			<div className="auth-panel-right">
 				<div className="auth-form-wrap">
 					<div className="auth-logo d-block d-md-none">
-						<span className="auth-logo-icon">💼</span>
-						<span className="auth-logo-name">Job Tracker</span>
+						<img src="/job_tracker.png" alt="Job Tracker" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
 					</div>
 
 					<h1 className="auth-heading">Create account</h1>
@@ -76,64 +78,40 @@ export default function RegisterPage() {
 
 					<form onSubmit={handleSubmit} autoComplete="on">
 						<div className="form-group">
-							<label htmlFor="register-name" className="form-label">Full Name</label>
-							<input
-								id="register-name"
-								type="text"
-								className="form-input"
-								placeholder="Your full name"
-								value={name}
-								onChange={(e) => setName(e.target.value)}
-								required
-								autoFocus
-							/>
+							<label htmlFor="register-name" className="form-label">
+								Full Name
+							</label>
+							<input id="register-name" type="text" className="form-input" placeholder="Your full name" value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
 						</div>
 
 						<div className="form-group">
-							<label htmlFor="register-username" className="form-label">Username</label>
-							<input
-								id="register-username"
-								type="text"
-								className="form-input"
-								placeholder="Choose a username"
-								value={username}
-								onChange={(e) => setUsername(e.target.value)}
-								required
-							/>
+							<label htmlFor="register-username" className="form-label">
+								Username
+							</label>
+							<input id="register-username" type="text" className="form-input" placeholder="Choose a username" value={username} onChange={(e) => setUsername(e.target.value)} required />
 						</div>
 
 						<div className="form-group">
 							<label htmlFor="register-email" className="form-label">
 								Email <span className="optional">(optional)</span>
 							</label>
-							<input
-								id="register-email"
-								type="email"
-								className="form-input"
-								placeholder="you@example.com"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-							/>
+							<input id="register-email" type="email" className="form-input" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
 						</div>
 
 						<div className="form-group">
-							<label htmlFor="register-password" className="form-label">Password</label>
-							<input
-								id="register-password"
-								type="password"
-								className="form-input"
-								placeholder="Create a password"
-								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-								required
-							/>
+							<label htmlFor="register-password" className="form-label">
+								Password
+							</label>
+							<input id="register-password" type="password" className="form-input" placeholder="Create a password" value={password} onChange={(e) => setPassword(e.target.value)} required />
 						</div>
 
 						{error && <div className="alert alert-error">{error}</div>}
 
 						<button type="submit" className="btn btn-primary btn-lg btn-full" disabled={loading}>
 							{loading ? (
-								<><span className="spinner" style={{ borderColor: "rgba(255,255,255,.4)", borderTopColor: "#fff" }} /> Creating account...</>
+								<>
+									<span className="spinner" style={{ borderColor: "rgba(255,255,255,.4)", borderTopColor: "#fff" }} /> Creating account...
+								</>
 							) : (
 								"Create Account"
 							)}
@@ -141,8 +119,7 @@ export default function RegisterPage() {
 					</form>
 
 					<div className="auth-footer">
-						Already have an account?{" "}
-						<Link to="/login">Sign in</Link>
+						Already have an account? <Link to="/login">Sign in</Link>
 					</div>
 				</div>
 			</div>

@@ -10,6 +10,7 @@ import registerRoute from "./auth/register.js";
 import jobsRoute from "./auth/jobs.js";
 import applicationsRoute from "./auth/applications.js";
 import resumeRoute from "./auth/resume.js";
+import searchSettingsRoute from "./auth/searchSettings.js";
 import cors from "cors";
 import dotenv from "dotenv";
 
@@ -49,6 +50,7 @@ app.use("/auth/refresh", refreshRoute);
 app.use("/auth/logout", logoutRoute);
 app.use("/auth/me", meRoute);
 app.use("/auth/applications", applicationsRoute);
-app.use("/auth/resume", resumeRoute);
+// app.use("/auth/resume", resumeRoute);
+app.use("/auth/search-settings", searchSettingsRoute);
 
 app.listen(3000, () => console.log("Server running on port 3000"));

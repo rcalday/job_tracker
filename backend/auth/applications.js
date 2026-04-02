@@ -73,7 +73,7 @@ router.get("/", authenticate, async (req, res) => {
 	const search = (req.query.search ?? "").trim();
 	const status = req.query.status ?? "";
 	const pageNum = Math.max(1, parseInt(req.query.page) || 1);
-	const limitNum = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
+	const limitNum = Math.min(100, Math.max(1, parseInt(req.query.limit) || 10));
 	const offset = (pageNum - 1) * limitNum;
 
 	const conditions = ["user_id = $1"];

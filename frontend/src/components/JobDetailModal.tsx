@@ -39,13 +39,18 @@ export default function JobDetailModal({ job, onClose, onOpenJob }: Props) {
 				{/* Body */}
 				<div className="modal-body">
 					{job.description ? (
-						<p style={{ whiteSpace: "pre-wrap", fontSize: "0.9rem", color: "var(--text-secondary)", lineHeight: 1.75, margin: 0 }}>
-							{job.description}
-						</p>
+						<p
+							style={{
+								whiteSpace: "pre-wrap",
+								fontSize: "0.9rem",
+								color: "var(--text-secondary)",
+								lineHeight: 1.75,
+								margin: 0,
+							}}
+							dangerouslySetInnerHTML={{ __html: job.description }}
+						/>
 					) : (
-						<p style={{ color: "var(--text-muted)", fontStyle: "italic", margin: 0 }}>
-							No description available.
-						</p>
+						<p style={{ color: "var(--text-muted)", fontStyle: "italic", margin: 0 }}>No description available.</p>
 					)}
 				</div>
 
@@ -64,7 +69,7 @@ export default function JobDetailModal({ job, onClose, onOpenJob }: Props) {
 									window.open(job.job_url, "_blank", "noopener,noreferrer");
 								}
 							}}>
-							Open Job ↗
+							Apply ↗
 						</button>
 					)}
 				</div>
@@ -72,4 +77,3 @@ export default function JobDetailModal({ job, onClose, onOpenJob }: Props) {
 		</div>
 	);
 }
-

@@ -48,18 +48,18 @@ export default function LoginPage() {
 			<div className="auth-panel-left">
 				<div style={{ maxWidth: 380 }}>
 					<div className="auth-logo" style={{ marginBottom: 40 }}>
-						<span className="auth-logo-icon">💼</span>
-						<span className="auth-logo-name" style={{ color: "#fff" }}>Job Tracker</span>
+						<img src="/job_tracker.png" alt="Job Tracker" style={{ width: "75%", height: "100%", objectFit: "contain" }} />
 					</div>
-					<div className="auth-panel-headline">Track every<br />opportunity.</div>
-					<div className="auth-panel-sub">
-						Stay organized and never lose track of a job application again.
+					<div className="auth-panel-headline">
+						Track every
+						<br />
+						opportunity.
 					</div>
+					<div className="auth-panel-sub">Stay organized and never lose track of a job application again.</div>
 					<div style={{ marginTop: 36, display: "flex", flexDirection: "column", gap: 4 }}>
 						{[
 							{ icon: "🔍", text: "Search jobs from multiple sources" },
 							{ icon: "📋", text: "Track application status in one place" },
-							{ icon: "📄", text: "Store your resumes securely" },
 							{ icon: "📊", text: "Visualize your job search progress" },
 						].map((f) => (
 							<div className="auth-feature" key={f.text}>
@@ -75,8 +75,7 @@ export default function LoginPage() {
 			<div className="auth-panel-right">
 				<div className="auth-form-wrap">
 					<div className="auth-logo d-block d-md-none">
-						<span className="auth-logo-icon">💼</span>
-						<span className="auth-logo-name">Job Tracker</span>
+						<img src="/job_tracker.png" alt="Job Tracker" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
 					</div>
 
 					<h1 className="auth-heading">Welcome back</h1>
@@ -84,39 +83,21 @@ export default function LoginPage() {
 
 					<form onSubmit={handleSubmit} autoComplete="on">
 						<div className="form-group">
-							<label htmlFor="login-username" className="form-label">Username</label>
-							<input
-								id="login-username"
-								type="text"
-								className="form-input"
-								placeholder="your-username"
-								value={username}
-								onChange={(e) => setUsername(e.target.value)}
-								required
-								autoFocus
-							/>
+							<label htmlFor="login-username" className="form-label">
+								Username
+							</label>
+							<input id="login-username" type="text" className="form-input" placeholder="your-username" value={username} onChange={(e) => setUsername(e.target.value)} required autoFocus />
 						</div>
 
 						<div className="form-group">
-							<label htmlFor="login-password" className="form-label">Password</label>
-							<input
-								id="login-password"
-								type="password"
-								className="form-input"
-								placeholder="Enter your password"
-								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-								required
-							/>
+							<label htmlFor="login-password" className="form-label">
+								Password
+							</label>
+							<input id="login-password" type="password" className="form-input" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} required />
 						</div>
 
 						<div className="form-group check-row" style={{ marginBottom: 20 }}>
-							<input
-								type="checkbox"
-								id="keep-signed-in"
-								checked={rememberMe}
-								onChange={(e) => setRememberMe(e.target.checked)}
-							/>
+							<input type="checkbox" id="keep-signed-in" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
 							<label htmlFor="keep-signed-in">Keep me signed in</label>
 						</div>
 
@@ -124,7 +105,9 @@ export default function LoginPage() {
 
 						<button type="submit" className="btn btn-primary btn-lg btn-full" disabled={loading}>
 							{loading ? (
-								<><span className="spinner" style={{ borderColor: "rgba(255,255,255,.4)", borderTopColor: "#fff" }} /> Signing in...</>
+								<>
+									<span className="spinner" style={{ borderColor: "rgba(255,255,255,.4)", borderTopColor: "#fff" }} /> Signing in...
+								</>
 							) : (
 								"Sign In"
 							)}
@@ -132,8 +115,7 @@ export default function LoginPage() {
 					</form>
 
 					<div className="auth-footer">
-						New here?{" "}
-						<Link to="/register">Create an account</Link>
+						New here? <Link to="/register">Create an account</Link>
 					</div>
 				</div>
 			</div>

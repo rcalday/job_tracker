@@ -14,7 +14,7 @@ interface Application {
 }
 
 const STATUSES = ["Saved", "Applied", "Interview", "Rejected"] as const;
-const PAGE_SIZE = 10;
+const PAGE_SIZES = [10, 50, 100] as const;
 
 function statusClass(status: string) {
 	switch (status) {
@@ -56,6 +56,7 @@ export default function MyApplicationsPage() {
 	const [searchInput, setSearchInput] = useState("");
 	const [search, setSearch] = useState("");
 	const [statusFilter, setStatusFilter] = useState("");
+	const [pageSize, setPageSize] = useState<number>(10);
 	const [page, setPage] = useState(1);
 	const [total, setTotal] = useState(0);
 	const [totalPages, setTotalPages] = useState(1);
@@ -83,6 +84,11 @@ export default function MyApplicationsPage() {
 		setPage(1);
 	}
 
+	function handlePageSizeChange(val: number) {
+		setPageSize(val);
+		setPage(1);
+	}
+
 	useEffect(() => {
 		let cancelled = false;
 		async function fetchApplications() {
@@ -93,7 +99,7 @@ export default function MyApplicationsPage() {
 				if (search) params.set("search", search);
 				if (statusFilter) params.set("status", statusFilter);
 				params.set("page", String(page));
-				params.set("limit", String(PAGE_SIZE));
+				params.set("limit", String(pageSize));
 
 				const res = await fetch(`http://localhost:3000/auth/applications?${params}`, { credentials: "include" });
 				if (!res.ok) throw new Error("Failed to load applications");
@@ -112,7 +118,7 @@ export default function MyApplicationsPage() {
 		return () => {
 			cancelled = true;
 		};
-	}, [search, statusFilter, page]);
+	}, [search, statusFilter, page, pageSize]);
 
 	async function handleStatusChange(id: number, newStatus: string) {
 		setUpdatingId(id);
@@ -161,7 +167,7 @@ export default function MyApplicationsPage() {
 					</div>
 
 					{/* Status filter */}
-					<select className="form-select" style={{ width: "auto", flexShrink: 0 }} value={statusFilter} onChange={(e) => handleStatusFilter(e.target.value)} aria-label="Filter by status">
+					<select className="form-select form-select-compact" style={{ flexShrink: 0 }} value={statusFilter} onChange={(e) => handleStatusFilter(e.target.value)} aria-label="Filter by status">
 						<option value="">All statuses</option>
 						{STATUSES.map((s) => (
 							<option key={s} value={s}>
@@ -238,9 +244,11 @@ export default function MyApplicationsPage() {
 																description: app.description,
 																job_url: app.job_link,
 															})
-														}>
-														{truncate(app.description)}
-													</span>
+														}
+														dangerouslySetInnerHTML={{
+															__html: truncate(app.description),
+														}}
+													/>
 												) : (
 													<span className="td-muted">—</span>
 												)}
@@ -248,7 +256,7 @@ export default function MyApplicationsPage() {
 											<td>
 												<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
 													<span className={statusClass(app.status)}>{app.status}</span>
-													<select className="form-select" style={{ fontSize: "0.82rem", padding: "4px 8px", width: "auto" }} value={app.status} disabled={updatingId === app.id} onChange={(e) => handleStatusChange(app.id, e.target.value)} aria-label="Update status">
+													<select className="form-select form-select-compact" value={app.status} disabled={updatingId === app.id} onChange={(e) => handleStatusChange(app.id, e.target.value)} aria-label="Update status">
 														{STATUSES.map((s) => (
 															<option key={s} value={s}>
 																{s}
@@ -274,11 +282,20 @@ export default function MyApplicationsPage() {
 						</div>
 
 						{/* Pagination */}
-						{totalPages > 1 && (
+						{total > 0 && (
 							<div className="pagination-bar">
-								<span className="pagination-info">
-									Page {page} of {totalPages} · {total} total
-								</span>
+								<div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+									<span className="pagination-info">
+										Page {page} of {totalPages} · {total} total
+									</span>
+									<select className="form-select form-select-compact" value={pageSize} onChange={(e) => handlePageSizeChange(Number(e.target.value))} aria-label="Rows per page">
+										{PAGE_SIZES.map((s) => (
+											<option key={s} value={s}>
+												{s} / page
+											</option>
+										))}
+									</select>
+								</div>
 								<div className="pagination-controls">
 									<button className="pg-btn" onClick={() => setPage(1)} disabled={page === 1} title="First page">
 										«
