@@ -1,65 +1,64 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import Layout from "./components/Layout";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import JobSearchPage from "./pages/JobSearchPage";
+import ResumeVaultPage from "./pages/ResumeVaultPage";
+import MyApplicationsPage from "./pages/MyApplicationsPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
-function MainLayout({ isAuthenticated, setIsAuthenticated }: { isAuthenticated: boolean | null; setIsAuthenticated: (auth: boolean) => void }) {
+function ProtectedRoute() {
+	const { isAuthenticated, loading } = useAuth();
+	if (loading) return null;
+	return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+}
+
+function PublicRoute() {
+	const { isAuthenticated, loading } = useAuth();
+	if (loading) return null;
+	return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Outlet />;
+}
+
+function AppRoutes() {
 	return (
-		<div className="d-flex flex-column min-vh-100 bg-light">
-			<main>
-				<div className="container-fluid d-flex justify-content-center align-items-center p-0 m-0" style={{ minHeight: "calc(100vh - 72px)" }}>
-					<div className="w-100 d-flex justify-content-center align-items-center" style={{ minHeight: "100%" }}>
-						{/* <div className="bg-white rounded shadow-sm p-4 p-md-5 w-100" style={{ maxWidth: 420 }}> */}
-						<Routes>
-							<Route path="/login" element={<LoginPage setIsAuthenticated={setIsAuthenticated} />} />
-							<Route path="/register" element={<RegisterPage />} />
-							<Route path="/search" element={isAuthenticated ? <JobSearchPage /> : <Navigate to="/login" replace />} />
-							<Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
-							<Route path="*" element={<NotFoundPage />} />
-						</Routes>
-						{/* </div> */}
-					</div>
-				</div>
-			</main>
-		</div>
+		<Routes>
+			{/* Public routes */}
+			<Route element={<PublicRoute />}>
+				<Route path="/login" element={<LoginPage />} />
+				<Route path="/register" element={<RegisterPage />} />
+			</Route>
+
+			{/* Protected routes with layout */}
+			<Route element={<ProtectedRoute />}>
+				<Route element={<Layout />}>
+					<Route path="/dashboard" element={<DashboardPage />} />
+					<Route path="/search-jobs" element={<JobSearchPage />} />
+					<Route path="/resume-vault" element={<ResumeVaultPage />} />
+					<Route path="/my-applications" element={<MyApplicationsPage />} />
+				</Route>
+			</Route>
+
+			{/* Root redirect */}
+			<Route path="/" element={<RootRedirect />} />
+			<Route path="*" element={<NotFoundPage />} />
+		</Routes>
 	);
 }
 
-function App() {
-	const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-
-	useEffect(() => {
-		// Check authentication by calling backend /auth/me endpoint
-		const checkAuth = async () => {
-			try {
-				const res = await fetch("http://localhost:3000/auth/me", {
-					credentials: "include",
-				});
-				if (res.ok) {
-					setIsAuthenticated(true);
-				} else {
-					setIsAuthenticated(false);
-				}
-			} catch {
-				setIsAuthenticated(false);
-			}
-		};
-		checkAuth();
-	}, []);
-
-	if (isAuthenticated === null) return null;
-
-	return (
-		<Router>
-			<Routes>
-				<Route path="/dashboard" element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" replace />} />
-				<Route path="*" element={<MainLayout isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated} />} />
-			</Routes>
-		</Router>
-	);
+function RootRedirect() {
+	const { isAuthenticated, loading } = useAuth();
+	if (loading) return null;
+	return <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />;
 }
 
-export default App;
+export default function App() {
+	return (
+		<AuthProvider>
+			<Router>
+				<AppRoutes />
+			</Router>
+		</AuthProvider>
+	);
+}

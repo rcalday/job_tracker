@@ -1,43 +1,65 @@
 import { useEffect, useState } from "react";
-import Sidebar from "../components/Sidebar";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useAuth } from "../context/AuthContext";
+import JobDetailModal from "../components/JobDetailModal";
+import type { ModalJob } from "../components/JobDetailModal";
 
-interface Job {
+interface Application {
 	id: number;
-	title: string;
+	job_title: string;
 	company: string;
 	location: string;
 	description: string;
-	job_url: string;
-	source: string;
-	posted_at: string;
+	status: string;
+	job_link: string;
+	applied_at: string;
 }
 
-const DashboardPage = () => {
-	const [jobs, setJobs] = useState<Job[]>([]);
-	const [loading, setLoading] = useState<boolean>(true);
-	const [error, setError] = useState<string>("");
-	const [weekCount, setWeekCount] = useState<number>(0);
-	const [monthCount, setMonthCount] = useState<number>(0);
-	const [yearCount, setYearCount] = useState<number>(0);
+interface ChartPoint {
+	date: string;
+	count: number;
+}
+
+const STATUS_COLORS: Record<string, string> = {
+	Applied: "primary",
+	Interview: "success",
+	Rejected: "danger",
+	Saved: "secondary",
+};
+
+export default function DashboardPage() {
+	const { user } = useAuth();
+	const [applications, setApplications] = useState<Application[]>([]);
+	const [chartData, setChartData] = useState<ChartPoint[]>([]);
+	const [weekCount, setWeekCount] = useState(0);
+	const [monthCount, setMonthCount] = useState(0);
+	const [yearCount, setYearCount] = useState(0);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState("");
+	const [modalJob, setModalJob] = useState<ModalJob | null>(null);
 
 	useEffect(() => {
-		// Fetch jobs and statistics here
 		const fetchData = async () => {
 			try {
 				setLoading(true);
 				setError("");
-				// Replace with your actual API endpoints
-				const jobsRes = await fetch("/api/applications");
-				const jobsData = await jobsRes.json();
-				setJobs(jobsData);
 
-				const statsRes = await fetch("/api/applications/stats");
-				const statsData = await statsRes.json();
-				setWeekCount(statsData.week || 0);
-				setMonthCount(statsData.month || 0);
-				setYearCount(statsData.year || 0);
-			} catch (err: any) {
-				setError("Failed to load data");
+				const [statsRes, appsRes] = await Promise.all([fetch("http://localhost:3000/auth/applications/stats", { credentials: "include" }), fetch("http://localhost:3000/auth/applications", { credentials: "include" })]);
+
+				if (statsRes.ok) {
+					const statsData = await statsRes.json();
+					setWeekCount(statsData.week ?? 0);
+					setMonthCount(statsData.month ?? 0);
+					setYearCount(statsData.year ?? 0);
+					setChartData(statsData.chart ?? []);
+				}
+
+				if (appsRes.ok) {
+					const appsData = await appsRes.json();
+					setApplications(appsData.applications ?? []);
+				}
+			} catch {
+				setError("Failed to load data. Please try again.");
 			} finally {
 				setLoading(false);
 			}
@@ -46,105 +68,140 @@ const DashboardPage = () => {
 	}, []);
 
 	return (
-		<div
-			className="container-fluid"
-			style={{
-				minHeight: "100vh",
-				background:
-					"radial-gradient(circle at 15% 25%, #ffe7d1 20%, transparent 60%), radial-gradient(circle at 90% 80%, #cbe7e3 30%, transparent 70%), #f7f8fa",
-			}}
-		>
-			<div className="row min-vh-100">
-				{/* Sidebar */}
-				<Sidebar />
-				{/* Main Content */}
-				<main className="col-12 col-md-9 col-lg-10 ms-sm-auto px-0 px-md-4 py-4 d-flex flex-column align-items-center">
-					<div className="w-100" style={{ maxWidth: 900 }}>
-						{/* Statistics */}
-						<div className="row g-3 mb-4">
-							<div className="col-12 col-md-4">
-								<div className="bg-white rounded-4 shadow-sm p-4 text-center h-100">
-									<div className="text-uppercase text-secondary small mb-1" style={{ letterSpacing: 1.2 }}>
-										This Week
-									</div>
-									<div className="fw-bold display-6 text-primary">{weekCount}</div>
-									<div className="text-muted">Applications</div>
-								</div>
+		<div style={{ maxWidth: 960, margin: "0 auto" }}>
+			{/* Header */}
+			<div className="mb-4">
+				<h1 className="fw-bold mb-1" style={{ fontSize: "1.7rem", color: "#36394b" }}>
+					Welcome back, {user?.login_name?.split(" ")[0]} 👋
+				</h1>
+				<p className="text-muted mb-0">Here's a summary of your job search activity.</p>
+			</div>
+
+			{/* Stat Cards */}
+			<div className="row g-3 mb-4">
+				{[
+					{ label: "This Week", value: weekCount, color: "#21867a" },
+					{ label: "This Month", value: monthCount, color: "#1b6e6b" },
+					{ label: "This Year", value: yearCount, color: "#145c59" },
+				].map(({ label, value, color }) => (
+					<div className="col-12 col-sm-4" key={label}>
+						<div className="bg-white rounded-4 shadow-sm p-4 text-center h-100 border">
+							<div className="text-uppercase text-muted small mb-2 fw-semibold" style={{ letterSpacing: 1 }}>
+								{label}
 							</div>
-							<div className="col-12 col-md-4">
-								<div className="bg-white rounded-4 shadow-sm p-4 text-center h-100">
-									<div className="text-uppercase text-secondary small mb-1" style={{ letterSpacing: 1.2 }}>
-										This Month
-									</div>
-									<div className="fw-bold display-6 text-primary">{monthCount}</div>
-									<div className="text-muted">Applications</div>
-								</div>
+							<div className="fw-bold" style={{ fontSize: "2.8rem", lineHeight: 1, color }}>
+								{value}
 							</div>
-							<div className="col-12 col-md-4">
-								<div className="bg-white rounded-4 shadow-sm p-4 text-center h-100">
-									<div className="text-uppercase text-secondary small mb-1" style={{ letterSpacing: 1.2 }}>
-										This Year
-									</div>
-									<div className="fw-bold display-6 text-primary">{yearCount}</div>
-									<div className="text-muted">Applications</div>
-								</div>
+							<div className="text-muted mt-1" style={{ fontSize: "0.88rem" }}>
+								Applications
 							</div>
-						</div>
-						{/* Table */}
-						<div className="bg-white rounded-4 shadow-sm p-4">
-							<h2
-								className="mb-4 fw-bold"
-								style={{ fontFamily: "serif", fontSize: "1.5rem", color: "#36394b", lineHeight: 1.1 }}
-							>
-								Your Job Applications
-							</h2>
-							{loading ? (
-								<div className="text-center text-secondary py-4">Loading jobs...</div>
-							) : error ? (
-								<div className="alert alert-danger py-2 mb-3">{error}</div>
-							) : (
-								<div className="table-responsive">
-									<table className="table table-hover align-middle">
-										<thead className="table-light">
-											<tr>
-												<th>Title</th>
-												<th>Company</th>
-												<th>Location</th>
-												<th>Source</th>
-												<th>Posted</th>
-												<th>Link</th>
-											</tr>
-										</thead>
-										<tbody>
-											{jobs.map((job: Job) => (
-												<tr key={job.id}>
-													<td>{job.title}</td>
-													<td>{job.company}</td>
-													<td>{job.location}</td>
-													<td>{job.source}</td>
-													<td>{job.posted_at ? new Date(job.posted_at).toLocaleDateString() : ""}</td>
-													<td>
-														<a
-															href={job.job_url}
-															target="_blank"
-															rel="noopener noreferrer"
-															className="btn btn-outline-primary btn-sm"
-														>
-															View
-														</a>
-													</td>
-												</tr>
-											))}
-										</tbody>
-									</table>
-								</div>
-							)}
 						</div>
 					</div>
-				</main>
+				))}
 			</div>
+
+			{/* Chart */}
+			<div className="bg-white rounded-4 shadow-sm p-4 mb-4 border">
+				<h2 className="fw-semibold mb-3" style={{ fontSize: "1.1rem", color: "#36394b" }}>
+					Applications — Last 30 Days
+				</h2>
+				{chartData.length > 0 ? (
+					<ResponsiveContainer width="100%" height={220}>
+						<BarChart data={chartData} margin={{ top: 4, right: 16, left: -20, bottom: 0 }}>
+							<CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+							<XAxis dataKey="date" tick={{ fontSize: 11 }} />
+							<YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+							<Tooltip />
+							<Bar dataKey="count" fill="#21867a" radius={[4, 4, 0, 0]} name="Applications" />
+						</BarChart>
+					</ResponsiveContainer>
+				) : (
+					<div className="text-center text-muted py-4" style={{ fontSize: "0.95rem" }}>
+						No applications in the last 30 days yet. Start applying!
+					</div>
+				)}
+			</div>
+
+			{/* Applications Table */}
+			<div className="bg-white rounded-4 shadow-sm p-4 border">
+				<h2 className="fw-semibold mb-3" style={{ fontSize: "1.1rem", color: "#36394b" }}>
+					Recent Applications
+				</h2>
+
+				{loading ? (
+					<div className="text-center text-secondary py-4">Loading...</div>
+				) : error ? (
+					<div className="alert alert-danger py-2">{error}</div>
+				) : applications.length === 0 ? (
+					<div className="text-center text-muted py-4">No applications yet. Try searching for jobs!</div>
+				) : (
+					<div className="table-responsive">
+						<table className="table table-hover align-middle mb-0">
+							<thead className="table-light">
+								<tr>
+									<th>Job Title</th>
+									<th>Company</th>
+									<th>Location</th>
+									<th>
+										Description{" "}
+										<span className="text-muted fw-normal" style={{ fontSize: "0.78rem" }}>
+											(click to expand)
+										</span>
+									</th>
+									<th>Status</th>
+									<th>Applied</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody>
+								{applications.map((app) => (
+									<tr key={app.id}>
+										<td className="fw-medium">{app.job_title}</td>
+										<td>{app.company || "—"}</td>
+										<td>{app.location || "—"}</td>
+										<td>
+											{app.description ? (
+												<span
+													className="text-muted"
+													style={{ fontSize: "0.83rem", cursor: "pointer" }}
+													title="Click to read full description"
+													onClick={() =>
+														setModalJob({
+															title: app.job_title,
+															company: app.company,
+															description: app.description,
+															job_url: app.job_link,
+														})
+													}>
+													{app.description.length > 90 ? app.description.slice(0, 90) + "…" : app.description}
+												</span>
+											) : (
+												<span className="text-muted" style={{ fontSize: "0.83rem" }}>
+													—
+												</span>
+											)}
+										</td>
+										<td>
+											<span className={`badge bg-${STATUS_COLORS[app.status] ?? "secondary"}`}>{app.status}</span>
+										</td>
+										<td style={{ fontSize: "0.85rem" }}>{app.applied_at ? new Date(app.applied_at).toLocaleDateString() : "—"}</td>
+										<td>
+											{app.job_link && (
+												<a href={app.job_link} target="_blank" rel="noopener noreferrer" className="btn btn-outline-secondary btn-sm">
+													View
+												</a>
+											)}
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				)}
+			</div>
+
+			{/* Job Detail Modal */}
+			{modalJob && <JobDetailModal job={modalJob} onClose={() => setModalJob(null)} />}
 		</div>
 	);
-};
-
-export default DashboardPage;
+}

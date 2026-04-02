@@ -1,41 +1,35 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function RegisterPage() {
 	const [name, setName] = useState("");
 	const [username, setUsername] = useState("");
+	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");
-	const [success, setSuccess] = useState("");
 	const [loading, setLoading] = useState(false);
+	const navigate = useNavigate();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
 		setError("");
-		setSuccess("");
 
 		try {
 			const res = await fetch("http://localhost:3000/auth/register", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ name, username, password }),
+				body: JSON.stringify({ name, username, email, password }),
 			});
 
-			if (!res.ok) throw new Error("Registration failed");
-
-			setSuccess("Registration successful! You can now log in.");
-
-			// optional: clear inputs
-			setName("");
-			setUsername("");
-			setPassword("");
-		} catch (err: unknown) {
-			if (err instanceof Error) {
-				setError(err.message);
-			} else {
-				setError("Registration failed");
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.error || "Registration failed");
 			}
+
+			navigate("/login");
+		} catch (err: unknown) {
+			setError(err instanceof Error ? err.message : "Registration failed");
 		} finally {
 			setLoading(false);
 		}
@@ -49,27 +43,14 @@ export default function RegisterPage() {
 				display: "flex",
 				alignItems: "center",
 				justifyContent: "center",
-				padding: "2vw",
+				padding: "2rem 1rem",
 			}}>
-			<div
-				className="shadow-lg rounded-4 bg-white p-4 p-md-5 w-100"
-				style={{
-					maxWidth: 420,
-					width: "100%",
-					boxSizing: "border-box",
-				}}>
+			<div className="shadow-lg rounded-4 bg-white p-4 p-md-5 w-100" style={{ maxWidth: 420 }}>
 				<div className="mb-2 text-uppercase fw-semibold text-success small" style={{ letterSpacing: 1.2 }}>
 					Create Account
 				</div>
 
-				<h1
-					className="mb-2 fw-bold"
-					style={{
-						fontFamily: "serif",
-						fontSize: "2.2rem",
-						color: "#36394b",
-						lineHeight: 1.1,
-					}}>
+				<h1 className="mb-2 fw-bold" style={{ fontFamily: "serif", fontSize: "2.2rem", color: "#36394b", lineHeight: 1.1 }}>
 					Register
 				</h1>
 
@@ -80,9 +61,9 @@ export default function RegisterPage() {
 				<form onSubmit={handleSubmit} autoComplete="on">
 					<div className="mb-3">
 						<label htmlFor="register-name" className="form-label fw-semibold">
-							Name
+							Full Name
 						</label>
-						<input id="register-name" type="text" className="form-control form-control-lg" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
+						<input id="register-name" type="text" className="form-control form-control-lg" placeholder="Your full name" value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
 					</div>
 
 					<div className="mb-3">
@@ -93,6 +74,13 @@ export default function RegisterPage() {
 					</div>
 
 					<div className="mb-3">
+						<label htmlFor="register-email" className="form-label fw-semibold">
+							Email <span className="fw-normal text-muted">(optional)</span>
+						</label>
+						<input id="register-email" type="email" className="form-control form-control-lg" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+					</div>
+
+					<div className="mb-3">
 						<label htmlFor="register-password" className="form-label fw-semibold">
 							Password
 						</label>
@@ -100,8 +88,6 @@ export default function RegisterPage() {
 					</div>
 
 					{error && <div className="alert alert-danger py-2 mb-3">{error}</div>}
-
-					{success && <div className="alert alert-success py-2 mb-3">{success}</div>}
 
 					<button
 						type="submit"
@@ -114,14 +100,14 @@ export default function RegisterPage() {
 							color: "#fff",
 						}}
 						disabled={loading}>
-						{loading ? "Registering..." : "Register"}
+						{loading ? "Registering..." : "Create Account"}
 					</button>
 				</form>
 
 				<div className="mt-4 text-secondary text-center" style={{ fontSize: "1rem" }}>
 					Already have an account?{" "}
 					<Link to="/login" className="fw-semibold text-success text-decoration-none">
-						Login
+						Sign in
 					</Link>
 				</div>
 			</div>
