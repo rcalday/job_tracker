@@ -141,6 +141,13 @@ export default function JobSearchPage() {
 		setSavingKey(key);
 		setSaveError("");
 
+		// Open the window synchronously before the async API call so the
+		// browser does not treat it as a popup (user-gesture chain must not
+		// be broken by an await before window.open).
+		if (job.job_url) {
+			window.open(job.job_url, "_blank", "noopener,noreferrer");
+		}
+
 		try {
 			const res = await API.post("/auth/applications", {
 				job_title: job.title,
@@ -154,9 +161,6 @@ export default function JobSearchPage() {
 
 			setSavedKeys((prev) => new Set(prev).add(key));
 			setResults((prev) => prev.filter((j) => jobKey(j) !== key));
-			if (job.job_url) {
-				window.open(job.job_url, "_blank", "noopener,noreferrer");
-			}
 		} catch (err: unknown) {
 			const axiosErr = err as AxiosError<{ error?: string }>;
 			setSaveError(axiosErr.response?.data?.error ?? (err instanceof Error ? err.message : "Failed to save application"));
