@@ -124,7 +124,7 @@ router.get("/", authenticate, async (req, res) => {
 			title: j.title,
 			company: j.company_name,
 			location: j.location,
-			job_url: j.related_links?.[0]?.link || "",
+			job_url: j.apply_options?.[0]?.link || j.related_links?.[0]?.link || "",
 			description: j.description || null,
 			source: "google",
 		}));
